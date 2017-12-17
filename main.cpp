@@ -154,7 +154,6 @@ bool test_3_delete() {
     Aye.Insert(-2,-2);
     Aye.Insert(-8,-8);
 
-
     T.Compare(Aye.Find(2), "ne", nullptr, "Find Elem 00");
     T.Compare(Aye.Delete(2), "eq", 1, "Delete Elem 00");
     T.Compare(Aye.Find(2), "eq", nullptr, "can't Find deleted 00");
@@ -169,7 +168,7 @@ bool test_3_delete() {
     T.Compare(Aye.Find(-2), "eq", nullptr, "can't Find deleted 02");
 
 
-    //T.Compare(Aye.Find(1), "ne", nullptr, "Find Elem 1");
+    T.Compare(Aye.Find(1), "ne", nullptr, "Find Elem 1 3");
     T.Compare(Aye.Find(3), "ne", nullptr, "Find Elem 2");
     T.Compare(Aye.Find(6), "ne", nullptr, "Find Elem 3");
     T.Compare(Aye.Find(9), "ne", nullptr, "Find Elem 4");

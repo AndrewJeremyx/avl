@@ -12,7 +12,9 @@ public:
 
     Tree() : _root(nullptr){}
 
-    ~Tree() { delete _root; }
+    ~Tree() {
+        _clear(_root);
+    }
 
     bool Insert(K, V);
 
@@ -29,14 +31,7 @@ private:
         Node(K key, V value, Node* parent = nullptr): l(nullptr), r(nullptr), p(parent), height(1), key_value(new std::pair<const K, V>(key, value)) {}
 
         ~Node() {
-            delete l;
-            l = nullptr;
-            delete r;
-            r = nullptr;
-            if (this->p) {
-                auto tmp = (this->p->l == this) ? &(this->p->l) : &(this->p->r);
-                *tmp = nullptr;
-            }
+            delete key_value;
         };
 
         PairType* key_value;
@@ -66,11 +61,11 @@ private:
 
     void _delete_one_kid(Node*);
 
-    void _delete_two_kid(Node*);
-
     Node* _find_next(Node*);
 
     int balance_f(Node*);
+
+    void _clear(Node*);
 
 };
 template <class K, class V>
@@ -90,31 +85,38 @@ void Tree<K, V>::_balance(Node * node) {
             }
             RRotate(tmp);
         }
+        if (balance_f(tmp) == 0) {
+            return;
+        }
         tmp = tmp->p;
     }
 }
 
 template <class K, class V>
 void Tree<K, V>::RRotate(Node* node) {
-    auto tmp = (node->p) ? ((node->p->l == node) ? &(node->p->l) : &(node->p->r)) : &(_root);
+    auto son_of_father = (node->p) ? ((node->p->l == node) ? &(node->p->l) : &(node->p->r)) : &(_root);
+    auto nodeLSon = node->l;
 
-    *tmp = node->l;
-    node->l->p = node->p;
-    node->l = (*tmp)->r;
-    (*tmp)->r = node;
-    node->p = *tmp;
+    *son_of_father = nodeLSon;
+    nodeLSon->p = node->p;
+    node->l = nodeLSon->r;
+    if (node->l) node->l->p = node;
+    node->p = nodeLSon;
+    nodeLSon->r = node;
     node->fix_height();
 }
 
 template <class K, class V>
 void Tree<K, V>::LRotate(Node* node) {
-    auto tmp = (node->p) ? ((node->p->l == node) ? &(node->p->l) : &(node->p->r)) : &(_root);
+    auto son_of_father = (node->p) ? ((node->p->l == node) ? &(node->p->l) : &(node->p->r)) : &(_root);
+    auto nodeRSon = node->r;
 
-    *tmp = node->r;
-    node->r->p = node->p;
-    node->r = (*tmp)->l;
-    (*tmp)->l = node;
-    node->p = *tmp;
+    *son_of_father = nodeRSon;
+    nodeRSon->p = node->p;
+    node->r = nodeRSon->l;
+    if (node->r) node->r->p = node;
+    node->p = nodeRSon;
+    nodeRSon->l = node;
     node->fix_height();
 }
 
@@ -223,15 +225,17 @@ void Tree<K, V>::_delete(Node* node) {
         _delete_one_kid(node);
     }
     else {
-        _delete_two_kid(node);
+        auto next = _find_next(node);
+        node->key_value = next->key_value;
+        next->key_value = nullptr;
+        _delete(next);
     }
     if (node_parent) { _balance(node_parent); }
 };
 template <class K, class V>
 void Tree<K, V>::_delete_leaf(Node* node) {
-    if (node == _root) {
-        _root = nullptr;
-    }
+    auto son_of_father = (node->p) ? ((node->p->l == node) ? &(node->p->l) : &(node->p->r)) : &(_root);
+    *son_of_father = nullptr;
     delete node;
 };
 
@@ -242,16 +246,7 @@ void Tree<K, V>::_delete_one_kid(Node* node) {
     *son_of_father = *son_of_deleted;
     (*son_of_deleted)->p = node->p;
     *son_of_deleted = nullptr;
-    node->p = nullptr;
     delete node;
-};
-
-template <class K, class V>
-void Tree<K, V>::_delete_two_kid(Node* node) {
-    auto next = _find_next(node);
-    delete node->key_value;
-    node->key_value = new std::pair<const K, V>(next->key_value->first, next->key_value->second);
-    _delete(next);
 };
 
 template <class K, class V>
@@ -270,4 +265,14 @@ typename Tree<K, V>::Node* Tree<K, V>::_find_next(Node* node) {
     return tmp->p;
 
 };
+
+template <class K, class V>
+void Tree<K, V>::_clear(Node* node) {
+    if (node) {
+        _clear(node->l);
+        _clear(node->r);
+        delete node;
+    }
+}
+
 #endif
